@@ -34,7 +34,7 @@ pipeline {
                         npm test
                     else
                         echo "No test script found — running lint as smoke test"
-                        npm run lint
+                        npm run lint -- .
                     fi
                 '''
             }
