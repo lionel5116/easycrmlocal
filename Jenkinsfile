@@ -33,8 +33,8 @@ pipeline {
                     if node -e "process.exit(require('./package.json').scripts.test ? 0 : 1)" 2>/dev/null; then
                         npm test
                     else
-                        echo "No test script found — running lint as smoke test"
-                        npm run lint -- .
+                        echo "No test script found — running TypeScript type check as smoke test"
+                        node_modules/.bin/tsc --noEmit
                     fi
                 '''
             }
