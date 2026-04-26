@@ -45,7 +45,7 @@ export function TopBar() {
 
         {/* Avatar */}
         <div className="w-8 h-8 rounded-full bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-xs font-semibold text-indigo-400">
-          AJ
+          RJ
         </div>
       </div>
     </header>
