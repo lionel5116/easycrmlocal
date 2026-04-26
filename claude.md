@@ -196,3 +196,163 @@ pm2 save
 This project was extracted from a monorepo/two-tier Bento stack setup. The backend (API + Postgres) lives in a separate repository/directory and runs independently. The only coupling point is the `/api/*` proxy in `next.config.ts` and the `NEXT_PUBLIC_API_URL` env var.
 
 To point this frontend at a different backend (e.g. staging), update `NEXT_PUBLIC_API_URL` in `.env.local`.
+
+---
+
+## CI/CD Infrastructure
+
+### Jenkins
+
+Jenkins LTS is installed via Homebrew and managed as a background service.
+
+| Detail | Value |
+|---|---|
+| Version | 2.555.1 (LTS) |
+| Install method | `brew install jenkins-lts` |
+| Port | **8081** (8080 was already in use by Nginx) |
+| URL | `http://127.0.0.1:8081` |
+| JENKINS_HOME | `~/.jenkins` |
+| Java runtime | `/opt/homebrew/opt/openjdk@21/bin/java` |
+| Initial admin password | `dc9c1154957845bcb5e4ef458ccea6c6` |
+
+Port 8080 is reserved for Nginx. The plist was patched at install time:
+`/opt/homebrew/opt/jenkins-lts/homebrew.mxcl.jenkins-lts.plist` — `--httpPort=8081`
+
+#### Service commands
+
+```bash
+# Start Jenkins (and register to start at login)
+brew services start jenkins-lts
+
+# Stop Jenkins
+brew services stop jenkins-lts
+
+# Restart Jenkins
+brew services restart jenkins-lts
+
+# Check status
+brew services list | grep jenkins
+
+# View logs
+tail -f ~/.jenkins/logs/jenkins.log
+```
+
+#### Initial admin password
+
+```bash
+cat ~/.jenkins/secrets/initialAdminPassword
+```
+
+#### Jenkins CLI
+
+The CLI jar lives at `~/.jenkins/jenkins-cli.jar` (or download fresh from the running instance):
+
+```bash
+curl -u admin:<password> -o /tmp/jenkins-cli.jar http://127.0.0.1:8081/jnlpJars/jenkins-cli.jar
+
+# Run a CLI command
+/opt/homebrew/opt/openjdk@21/bin/java \
+  -jar /tmp/jenkins-cli.jar \
+  -s http://127.0.0.1:8081 \
+  -auth admin:<password> \
+  <command>
+```
+
+#### Installed plugins
+
+| Plugin | Version | Purpose |
+|---|---|---|
+| git | 5.10.1 | Git SCM integration |
+| workflow-aggregator | 608.x | Pipeline (Declarative & Scripted) |
+| pipeline-stage-view | 2.41 | Visual stage progress in UI |
+| credentials-binding | 719.x | Inject credentials as env vars in pipelines |
+
+#### Git integration
+
+Jenkins uses the system git at `/usr/bin/git` (Apple Git 2.50.1).
+The default Git tool installation resolves `git` from PATH — no manual path configuration required.
+
+To verify from the Jenkins Script Console (`http://127.0.0.1:8081/script`):
+
+```groovy
+def proc = ["/usr/bin/git", "--version"].execute()
+proc.waitFor()
+println proc.text.trim()
+```
+
+---
+
+### Pipeline: easycrm-pipeline
+
+The declarative pipeline is defined in `Jenkinsfile` at the project root.
+
+#### Pipeline stages
+
+| Stage | What it does |
+|---|---|
+| Environment Check | Verifies node, npm, git, pm2 are on PATH |
+| Build | `npm ci` + `npm run build` |
+| Test | Runs `npm test` if the script exists, otherwise falls back to `npm run lint` |
+| Deploy to Local Nginx | `rsync` to Nginx www dir + `pm2 restart easycrmlocal` |
+| Push to Git | Commits any pending changes and pushes `main` to GitHub (requires `github-credentials`) |
+
+#### Nginx deployment path
+
+```
+/opt/homebrew/var/www/easycrmlocal/
+```
+
+The pipeline uses `rsync` to sync the project (excluding `node_modules` and `.git`) then syncs `.next/` separately, and restarts the pm2 process.
+
+#### Node.js version used
+
+`/Users/lioneljones/.nvm/versions/node/v24.12.0` (Node 24.12.0) — hardcoded in the `environment` block of the Jenkinsfile. Update `NODE_HOME` there if you switch Node versions.
+
+#### One-time setup (do this once after the Jenkins wizard)
+
+**1. Create the Jenkins job**
+
+```bash
+cd /Users/lioneljones/DevProjects/Programming/AIProjects/easycrmlocal
+.jenkins/create-job.sh <jenkins-username> <jenkins-password>
+```
+
+**2. Add a GitHub credential in Jenkins**
+
+Go to `http://127.0.0.1:8081/credentials/store/system/domain/_/newCredentials` and add:
+
+| Field | Value |
+|---|---|
+| Kind | Username with password |
+| ID | `github-credentials` |
+| Username | Your GitHub username |
+| Password | A GitHub Personal Access Token (needs `repo` scope) |
+
+**3. Push the Jenkinsfile to GitHub**
+
+```bash
+git add Jenkinsfile
+git commit -m "ci: add Jenkinsfile"
+git push
+```
+
+#### Triggering a build
+
+- **UI:** `http://127.0.0.1:8081/job/easycrm-pipeline/build`
+- **CLI:**
+  ```bash
+  /opt/homebrew/opt/openjdk@21/bin/java \
+    -jar /tmp/jenkins-cli.jar \
+    -s http://127.0.0.1:8081 \
+    -auth <user>:<password> \
+    build easycrm-pipeline -s -v
+  ```
+  (`-s` waits for completion, `-v` streams the log)
+
+#### Relevant files
+
+| File | Purpose |
+|---|---|
+| `Jenkinsfile` | Declarative pipeline definition |
+| `.jenkins/job-config.xml` | Jenkins job XML — used by `create-job.sh` to register the job |
+| `.jenkins/create-job.sh` | One-time helper to create the Jenkins job via CLI |
