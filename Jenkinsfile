@@ -29,15 +29,14 @@ pipeline {
 
         stage('Test') {
             steps {
-                script {
-                    def scripts = readJSON file: 'package.json'
-                    if (scripts.scripts.containsKey('test')) {
-                        sh 'npm test'
-                    } else {
-                        echo 'No test script found — running lint as smoke test'
-                        sh 'npm run lint'
-                    }
-                }
+                sh '''
+                    if node -e "process.exit(require('./package.json').scripts.test ? 0 : 1)" 2>/dev/null; then
+                        npm test
+                    else
+                        echo "No test script found — running lint as smoke test"
+                        npm run lint
+                    fi
+                '''
             }
         }
 
