@@ -102,7 +102,7 @@ export default function OverviewPage() {
         {/* Activity trend */}
         <div className="lg:col-span-2 rounded-xl border border-white/5 bg-[#111827] p-5">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-white">Activity (30 days)</h3>
+            <h3 className="text-sm font-semibold text-white">Activity Trend (30 days)</h3>
           </div>
           {dashLoading ? (
             <Skeleton className="h-[180px] w-full" />
