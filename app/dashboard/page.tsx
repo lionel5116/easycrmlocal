@@ -44,7 +44,7 @@ export default function OverviewPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold text-white">
-            {userRole === 'executive' && 'Executive Overview'}
+            {userRole === 'executive' && 'Executive Summary Current'}
             {userRole === 'manager' && 'Operations Dashboard'}
             {userRole === 'associate' && 'My Workspace'}
           </h1>
