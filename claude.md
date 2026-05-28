@@ -130,7 +130,7 @@ npm run build && pm2 restart easycrmlocal
 pm2 stop easycrmlocal
 
 # Start (if not running)
-pm2 start npm --name "easycrmlocal" --cwd "/opt/homebrew/var/www/easycrmlocal" -- start -- -p 3001
+pm2 start npm --name "easycrmlocal" --cwd "/Users/lioneljones/DevProjects/AIProjects/easycrmlocal" -- start -- -p 3001
 
 # Persist pm2 across reboots
 pm2 startup   # follow the printed command

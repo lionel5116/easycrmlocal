@@ -7,11 +7,11 @@ allowed-tools: Bash(npm *) Bash(rsync *) Bash(pm2 *) Bash(git *)
 
 Deploy EasyCRM to the local Nginx/pm2 production environment:
 
-1. Run `npm run build` from the project root (`/Users/lioneljones/DevProjects/Programming/AIProjects/easycrmlocal`)
+1. Run `npm run build` from the project root (`/Users/lioneljones/DevProjects/AIProjects/easycrmlocal`)
 2. Sync built files to the Nginx www directory:
    ```
    rsync -a --exclude='node_modules' --exclude='.git' \
-     /Users/lioneljones/DevProjects/Programming/AIProjects/easycrmlocal/ \
+     /Users/lioneljones/DevProjects/AIProjects/easycrmlocal/ \
      /opt/homebrew/var/www/easycrmlocal/
    ```
 3. Restart the pm2 process: `pm2 restart easycrmlocal`
