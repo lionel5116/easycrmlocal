@@ -130,7 +130,7 @@ npm run build && pm2 restart easycrmlocal
 pm2 stop easycrmlocal
 
 # Start (if not running)
-pm2 start npm --name "easycrmlocal" --cwd "/Users/lioneljones/DevProjects/AIProjects/easycrmlocal" -- start -- -p 3001
+pm2 start npm --name "easycrmlocal" --cwd "/opt/homebrew/var/www/easycrmlocal" -- start -- -p 3001
 
 # Persist pm2 across reboots
 pm2 startup   # follow the printed command
@@ -241,19 +241,7 @@ tail -f ~/.jenkins/logs/jenkins.log
 
 ```bash
 cat ~/.jenkins/secrets/initialAdminPassword
-
 ```
-
-Reset the password on 7/3/2026
-Password reset complete and verified:
-
-Username: lionel
-secret: PHRASE(BFLU@@123) (confirmed working — logged in successfully via API)
-Jenkins security is back on (anonymous access returns 403 again)
-A backup of the original config.xml is saved at ~/.jenkins/config.xml.bak-20260703151504 in case you ever need it
-You can now log in at http://127.0.0.1:8081 with those credentials.
-
-
 
 #### Jenkins CLI
 
